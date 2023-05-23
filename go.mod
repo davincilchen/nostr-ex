@@ -14,6 +14,7 @@ require (
 require (
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
+	github.com/rabbitmq/amqp091-go v1.8.1
 	golang.org/x/sys v0.6.0 // indirect
 	gorm.io/driver/mysql v1.5.0
 	gorm.io/driver/postgres v1.5.0

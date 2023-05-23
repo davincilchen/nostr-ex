@@ -12,6 +12,7 @@ import (
 	"github.com/sirupsen/logrus"
 	gormlogger "gorm.io/gorm/logger"
 
+	mqRepo "nostr-ex/pkg/app/rabbitmq/repo"
 	userUcase "nostr-ex/pkg/app/user/usecase"
 	"nostr-ex/pkg/config"
 	"nostr-ex/pkg/db"
@@ -62,6 +63,15 @@ func (t *Server) Serve() {
 	t.checkPort()
 	addr := ":" + t.Config.Server.Port
 
+	// before AddDefaultListener //
+	err := mqRepo.Init(t.Config.RabbitMQ.URL, t.Config.RabbitMQ.QName_NostrEvent)
+	if err != nil {
+		panic(err)
+	}
+	mq := mqRepo.GetPubManager()
+	defer mq.Close()
+
+	// .. //
 	m := userUcase.GetUserManager()
 	m.AddDefaultListener(config.GetRelayUrl(), "", "")
 

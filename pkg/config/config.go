@@ -10,10 +10,11 @@ import (
 )
 
 type Config struct {
-	Server Server    `json:"Server"`
-	Nostr  Nostr     `json:"Nostr"`
-	Relay  Relay     `json:"Relay"`
-	DB     db.Config `json:"DB"`
+	Server   Server    `json:"Server"`
+	Nostr    Nostr     `json:"Nostr"`
+	Relay    Relay     `json:"Relay"`
+	DB       db.Config `json:"DB"`
+	RabbitMQ RabbitMQ  `json:"RabbitMQ"`
 }
 
 type Server struct {
@@ -28,6 +29,11 @@ type Nostr struct {
 type Relay struct {
 	//URL string `json:"URL" env:"RELAY_URL" envDefault:"ws://127.0.0.1:8100/"`
 	URL string `json:"URL" env:"RELAY_URL" envDefault:"wss://relay.nekolicio.us/"`
+}
+
+type RabbitMQ struct {
+	URL              string `json:"URL" env:"MQ_URL" envDefault:"amqp://user:123@localhost:5672/"`
+	QName_NostrEvent string `json:"QName_NostrEvent" env:"QNAME_NOSTREVENT" envDefault:"nostr_event"`
 }
 
 var config *Config
@@ -87,6 +93,7 @@ func NewFromEnv() (*Config, error) {
 	config.Nostr = *GetNostrConfig()
 	config.Relay = *GetRelayConfig()
 	config.DB = *GetDBConfig()
+	config.RabbitMQ = *GetMQConfig()
 	return &config, nil
 }
 
@@ -110,6 +117,12 @@ func GetRelayConfig() *Relay {
 
 func GetDBConfig() *db.Config {
 	cfg := &db.Config{}
+	env.Parse(cfg)
+	return cfg
+}
+
+func GetMQConfig() *RabbitMQ {
+	cfg := &RabbitMQ{}
 	env.Parse(cfg)
 	return cfg
 }

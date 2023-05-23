@@ -3,6 +3,7 @@ package usecase
 import (
 	"fmt"
 	eventUCase "nostr-ex/pkg/app/event/usecase"
+	mqRepo "nostr-ex/pkg/app/rabbitmq/repo"
 	"nostr-ex/pkg/app/session"
 	"nostr-ex/pkg/models"
 	"nostr-ex/pkg/token"
@@ -143,6 +144,9 @@ func (t *NorstrUser) OnEvent(subID string, event []byte) {
 
 	fmt.Printf("\nOnEvent [my subID = %s] [my pubKey = %s] : %s\n",
 		subID, t.pubKey, event)
+
+	mq := mqRepo.GetPubManager()
+	mq.Send(event) //TODO: handle error
 
 	eUCase := eventUCase.NewEventHandler()
 	data := models.Event{
