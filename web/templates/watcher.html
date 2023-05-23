@@ -1,0 +1,48 @@
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>My Website</title>
+    <link rel="stylesheet" href="./style.css">
+    <link rel="icon" href="./favicon.ico" type="image/x-icon">
+</head>
+<body>
+    <main>
+        <h1>nostr watcher</h1>
+
+        <ul id="content">        
+    </main>
+  <script>
+    <!--let socket = new WebSocket("wss://relay.nekolicio.us");-->
+    let socket = new WebSocket("ws://127.0.0.1:8100");
+    socket.onopen = function(e) {
+      alert("[open] Connection established");
+      const req = JSON.stringify(['REQ', '12345x67890y12345z12345a', {'limit': 5}])
+      socket.send(req);
+    };
+
+    socket.onmessage = function(event) {
+      var ul = document.getElementById("content");
+      var li = document.createElement("li");
+      li.appendChild(document.createTextNode(event.data));
+      ul.appendChild(li);
+    };
+
+    socket.onclose = function(event) {
+      if (event.wasClean) {
+        alert(`[close] Connection closed cleanly, code=${event.code} reason=${event.reason}`);
+      } else {
+        // e.g. server process killed or network down
+        // event.code is usually 1006 in this case
+        alert('[close] Connection died');
+      }
+    };
+
+    socket.onerror = function(error) {
+      alert(`[error]`);
+    };
+
+  </script>
+  
+
+</body>

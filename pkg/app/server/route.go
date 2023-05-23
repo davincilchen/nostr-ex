@@ -1,6 +1,7 @@
 package server
 
 import (
+	"net/http"
 	userDlv "nostr-ex/pkg/app/user/delivery"
 
 	"github.com/gin-gonic/gin"
@@ -11,6 +12,15 @@ func Router() *gin.Engine {
 	router := gin.New()
 
 	router.Use(Logger, gin.Recovery())
+
+	router.LoadHTMLGlob("web/templates/*")
+
+	//router.GET("/", SocketHandler)
+	router.GET("/watcher", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "watcher.html", gin.H{
+			"title": "Posts",
+		})
+	})
 
 	router.POST("/event", userDlv.PostEvent)
 	router.POST("/event/req", userDlv.ReqEvent)
