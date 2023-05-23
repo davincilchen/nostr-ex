@@ -63,8 +63,17 @@ func (t *Server) Serve() {
 	t.checkPort()
 	addr := ":" + t.Config.Server.Port
 
-	// before AddDefaultListener //
-	err := mqRepo.Init(t.Config.RabbitMQ.URL, t.Config.RabbitMQ.QName_NostrEvent)
+	// Start MQ Consumer
+	mqConnector := mqRepo.NewConnector(t.Config.RabbitMQ.URL, t.Config.RabbitMQ.QName_NostrEvent)
+	err := mqConnector.Connect()
+	if err != nil {
+		panic(err)
+	}
+	mqConnector.StartConsumer()
+	defer mqConnector.DisConnect()
+
+	// add default MQ publisher before AddDefaultListener //
+	err = mqRepo.Init(t.Config.RabbitMQ.URL, t.Config.RabbitMQ.QName_NostrEvent)
 	if err != nil {
 		panic(err)
 	}

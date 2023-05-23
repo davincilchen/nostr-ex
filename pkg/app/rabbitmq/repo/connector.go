@@ -4,7 +4,10 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"nostr-ex/pkg/models"
 	"time"
+
+	eventUCase "nostr-ex/pkg/app/event/usecase"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
@@ -56,6 +59,10 @@ func (t *Connector) Connect() error {
 		nil,     // arguments
 	)
 
+	if err != nil {
+		return fmt.Errorf("%s %s", err, "Failed to declare a queue")
+	}
+
 	t.queue = &q
 	return nil
 }
@@ -85,7 +92,7 @@ func (t *Connector) ConnectStatus() error {
 	return nil
 }
 
-func (t *Connector) ConsumerStart() error {
+func (t *Connector) StartConsumer() error {
 
 	err := t.ConnectStatus()
 	if err != nil {
@@ -107,10 +114,19 @@ func (t *Connector) ConsumerStart() error {
 
 	go func() {
 		for d := range msgs {
+			//TODO: delete log
 			fmt.Printf("Received a message from MQ: %s\n", d.Body)
+
+			eUCase := eventUCase.NewEventHandler()
+			data := models.Event{
+				SubID: "", //TODO:
+				Data:  string(d.Body),
+			}
+			eUCase.SaveEvent(data)
+
 		}
 
-		fmt.Println("Queue consumer stop")
+		fmt.Println("Message queue consumer stop")
 	}()
 
 	return nil

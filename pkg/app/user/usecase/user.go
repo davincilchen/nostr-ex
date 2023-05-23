@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"fmt"
-	eventUCase "nostr-ex/pkg/app/event/usecase"
 	mqRepo "nostr-ex/pkg/app/rabbitmq/repo"
 	"nostr-ex/pkg/app/session"
 	"nostr-ex/pkg/models"
@@ -143,17 +142,17 @@ func (t *NorstrUser) OnEvent(subID string, event []byte) {
 	//fmt.Printf("Received event: %s\n", string(jsonData))
 
 	fmt.Printf("\nOnEvent [my subID = %s] [my pubKey = %s] : %s\n",
-		subID, t.pubKey, event)
+		subID, t.pubKey, event) //TODO: delete
 
 	mq := mqRepo.GetPubManager()
 	mq.Send(event) //TODO: handle error
 
-	eUCase := eventUCase.NewEventHandler()
-	data := models.Event{
-		SubID: subID,
-		Data:  string(event),
-	}
-	eUCase.SaveEvent(data)
+	// eUCase := eventUCase.NewEventHandler()
+	// data := models.Event{
+	// 	SubID: subID,
+	// 	Data:  string(event),
+	// }
+	// eUCase.SaveEvent(data)
 }
 
 func (t *NorstrUser) OnConnect() {
