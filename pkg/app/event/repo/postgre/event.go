@@ -48,3 +48,14 @@ func GetLastEvent() *models.Event {
 	db.Last(&ret)
 	return &ret
 }
+
+func GetEventFrom(id int) []models.Event {
+	var ret []models.Event
+	db, err := GetMainDB()
+	if err != nil {
+		return ret
+	}
+
+	db.Where("ID >?", id).Find(ret)
+	return ret
+}

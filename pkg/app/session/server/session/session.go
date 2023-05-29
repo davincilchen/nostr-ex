@@ -45,6 +45,9 @@ func NewSession(conn *websocket.Conn) *Session {
 	}
 }
 
+func (t *Session) OnDBDone() {
+	fmt.Println("OnDBDone =================")
+}
 func (t *Session) OnEvent(fromID int, event models.Msg) error {
 
 	subID := t.getSubID()

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	eventUCase "nostr-ex/pkg/app/event/usecase"
+	"nostr-ex/pkg/app/session/server/session"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
@@ -124,6 +125,11 @@ func (t *Connector) StartConsumer() error {
 			}
 			eUCase.SaveEvent(&data)
 			fmt.Printf("%#v", data)
+
+			session.ForEachSession(func(s session.SessionF) {
+				s.OnDBDone()
+			})
+
 			// mq := mqRepo.GetDBPublisher()
 			// mq.Send(data.ID)
 		}

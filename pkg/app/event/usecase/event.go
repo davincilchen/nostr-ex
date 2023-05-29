@@ -23,3 +23,7 @@ func (t *Handler) GetEvent(limit int) []models.Event {
 func (t *Handler) GetLastEvent() *models.Event {
 	return repo.GetLastEvent()
 }
+
+func (t *Handler) GetEventFrom(id int) []models.Event {
+	return repo.GetEventFrom(id)
+}

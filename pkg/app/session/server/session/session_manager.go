@@ -11,6 +11,7 @@ type SessionF interface {
 	Start()
 	Close()
 	OnEvent(fromID int, event models.Msg) error
+	OnDBDone() 
 }
 
 var allSession map[SessionF]struct{}
