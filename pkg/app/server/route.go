@@ -2,6 +2,7 @@ package server
 
 import (
 	"net/http"
+	relayDlv "nostr-ex/pkg/app/relay/delivery"
 	userDlv "nostr-ex/pkg/app/user/delivery"
 
 	"github.com/gin-gonic/gin"
@@ -21,7 +22,7 @@ func Router() *gin.Engine {
 			"title": "Posts",
 		})
 	})
-	router.POST("/relay", userDlv.PostEvent)
+	router.POST("/relay", relayDlv.AddRelay)
 
 	router.POST("/event", userDlv.PostEvent)
 	router.POST("/event/req", userDlv.ReqEvent)
