@@ -26,18 +26,6 @@ func GetRelayManager() *RelayManager {
 	return relayManager
 }
 
-func (t *RelayManager) AddDefaultListener(url, pubKey, privateKey string) (
-	*RelayConnector, error) {
-	u, err := t.AddRelay(url, pubKey, privateKey) //TODO: graceful shutdown, delete thread
-	if err != nil {
-		return nil, err
-	}
-
-	u.ReqEvent()
-	return u, nil
-
-}
-
 func (t *RelayManager) AddRelay(url, pubKey, privateKey string) (
 	*RelayConnector, error) {
 

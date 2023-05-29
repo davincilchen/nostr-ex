@@ -25,11 +25,6 @@ func NewRelayConnector(url, pubKey, privateKey string) (*RelayConnector, error) 
 
 	s := session.NewSession(url)
 
-	err := s.Start()
-	if err != nil {
-		return nil, err
-	}
-
 	u := &RelayConnector{
 		User: User{
 			pubKey:     pubKey,
@@ -40,6 +35,12 @@ func NewRelayConnector(url, pubKey, privateKey string) (*RelayConnector, error) 
 
 	s.SetOnEventHandler(u.OnEvent)
 	s.SetOnConnetHandler(u.OnConnect)
+
+	err := s.Start()
+	if err != nil {
+		return nil, err
+	}
+
 	return u, nil
 }
 

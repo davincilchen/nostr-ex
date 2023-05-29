@@ -72,7 +72,7 @@ func (t *Server) Serve() {
 	mqConnector.StartConsumer()
 	defer mqConnector.DisConnect()
 
-	// add default MQ publisher before AddDefaultListener //
+	// add default MQ publisher before AddRelay //
 	err = mqRepo.Init(t.Config.RabbitMQ.URL, t.Config.RabbitMQ.QName_NostrEvent)
 	if err != nil {
 		panic(err)
@@ -82,7 +82,7 @@ func (t *Server) Serve() {
 
 	// .. //
 	m := relayUcase.GetRelayManager()
-	m.AddDefaultListener(config.GetRelayUrl(), "", "")
+	m.AddRelay(config.GetRelayUrl(), "", "")
 
 	logrus.Printf("======= Server start to listen (%s) and serve =======\n", addr)
 	r := Router()

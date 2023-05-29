@@ -1,142 +1,64 @@
 package delivery
 
-// type PostEventParams struct {
-// 	PubKey string
-// 	PriKey string
-// 	Msg    string
-// }
+import (
+	"fmt"
+	"net/http"
+	"nostr-ex/pkg/config"
 
-// func postEventParam(ctx *gin.Context) *PostEventParams {
-// 	req := &PostEventParams{}
-// 	err := dlv.GetBodyFromRawData(ctx, req)
-// 	if err != nil {
-// 		//ctx.JSON(http.StatusBadRequest, nil)
-// 		return nil
-// 	}
-// 	return req
-// }
+	relayUcase "nostr-ex/pkg/app/relay/usecase"
+	dlv "nostr-ex/pkg/delivery"
 
-// func PostEventParam(ctx *gin.Context) *PostEventParams {
-// 	p := postEventParam(ctx)
-// 	if p == nil { // user default
-// 		p = &PostEventParams{}
-// 	}
+	"github.com/gin-gonic/gin"
+)
 
-// 	//if p.PubKey == "" || rpeq.PriKey == "" || p.Msg == "" {
-// 	if p.PubKey == "" || p.PriKey == "" {
-// 		cfg := config.GetConfig()
-// 		p.PubKey = cfg.Nostr.PublicKey
-// 		p.PriKey = cfg.Nostr.PrivateKey
-// 	}
+type PostEventParams struct {
+	PubKey string
+	PriKey string
+	Msg    string
+}
 
-// 	return p
-// }
+func postEventParam(ctx *gin.Context) *PostEventParams {
+	req := &PostEventParams{}
+	err := dlv.GetBodyFromRawData(ctx, req)
+	if err != nil {
+		//ctx.JSON(http.StatusBadRequest, nil)
+		return nil
+	}
+	return req
+}
 
-// func PostEvent(ctx *gin.Context) {
-// 	req := PostEventParam(ctx)
-// 	url := config.GetRelayUrl()
+func PostEventParam(ctx *gin.Context) *PostEventParams {
+	p := postEventParam(ctx)
+	if p == nil { // user default
+		p = &PostEventParams{}
+	}
 
-// 	m := userUcase.GetRelayManager()
-// 	user, err := m.AddUser(url, req.PubKey, req.PriKey)
-// 	if err != nil {
-// 		fmt.Println("AddUser Failed", err.Error())
-// 		ctx.JSON(http.StatusInternalServerError, nil)
-// 		return
-// 	}
-// 	err = user.PostEvent(req.Msg)
-// 	if err != nil {
-// 		fmt.Println("PostEvent Failed", err.Error())
-// 		ctx.JSON(http.StatusInternalServerError, nil)
-// 		return
-// 	}
-// 	ctx.JSON(http.StatusOK, nil)
-// }
+	//if p.PubKey == "" || rpeq.PriKey == "" || p.Msg == "" {
+	if p.PubKey == "" || p.PriKey == "" {
+		cfg := config.GetConfig()
+		p.PubKey = cfg.Nostr.PublicKey
+		p.PriKey = cfg.Nostr.PrivateKey
+	}
 
-// // .. //
-// type ReqEventParams struct {
-// 	PubKey string
-// }
+	return p
+}
 
-// func reqEventParam(ctx *gin.Context) *ReqEventParams {
-// 	req := &ReqEventParams{}
-// 	err := dlv.GetBodyFromRawData(ctx, req)
-// 	if err != nil {
-// 		//ctx.JSON(http.StatusBadRequest, nil)
-// 		return nil
-// 	}
+func PostEvent(ctx *gin.Context) {
+	req := PostEventParam(ctx)
+	url := config.GetRelayUrl()
 
-// 	if req.PubKey == "" {
-// 		//ctx.JSON(http.StatusBadRequest, nil)
-// 		return nil
-// 	}
-// 	return req
-// }
-
-// func ReqEventParam(ctx *gin.Context) *ReqEventParams {
-// 	p := reqEventParam(ctx)
-// 	if p == nil { // user default
-// 		cfg := config.GetConfig()
-// 		p = &ReqEventParams{}
-// 		p.PubKey = cfg.Nostr.PublicKey
-// 	}
-
-// 	return p
-// }
-
-// func ReqEvent(ctx *gin.Context) {
-// 	req := CloseReqParam(ctx)
-// 	url := config.GetRelayUrl()
-
-// 	m := userUcase.GetRelayManager()
-// 	err := m.ReqEvent(url, req.PubKey)
-// 	if err != nil {
-// 		fmt.Println("ReqEvent Failed", err.Error())
-// 		ctx.JSON(http.StatusInternalServerError, nil)
-// 		return
-// 	}
-// 	ctx.JSON(http.StatusOK, nil)
-// }
-
-// // .. //
-// type CloseReqParams struct {
-// 	PubKey string
-// }
-
-// func closeReqParam(ctx *gin.Context) *CloseReqParams {
-// 	req := &CloseReqParams{}
-// 	err := dlv.GetBodyFromRawData(ctx, req)
-// 	if err != nil {
-// 		//ctx.JSON(http.StatusBadRequest, nil)
-// 		return nil
-// 	}
-
-// 	if req.PubKey == "" {
-// 		//ctx.JSON(http.StatusBadRequest, nil)
-// 		return nil
-// 	}
-// 	return req
-// }
-
-// func CloseReqParam(ctx *gin.Context) *CloseReqParams {
-// 	p := closeReqParam(ctx)
-// 	if p == nil { // user default
-// 		cfg := config.GetConfig()
-// 		p = &CloseReqParams{}
-// 		p.PubKey = cfg.Nostr.PublicKey
-// 	}
-
-// 	return p
-// }
-
-// func CloseReq(ctx *gin.Context) {
-// 	req := CloseReqParam(ctx)
-// 	url := config.GetRelayUrl()
-// 	m := userUcase.GetRelayManager()
-// 	err := m.CloseReq(url, req.PubKey)
-// 	if err != nil {
-// 		fmt.Println("CloseReq Failed", err.Error())
-// 		ctx.JSON(http.StatusInternalServerError, nil)
-// 		return
-// 	}
-// 	ctx.JSON(http.StatusOK, nil)
-// }
+	m := relayUcase.GetRelayManager()
+	user, err := m.AddRelay(url, "", "")
+	if err != nil {
+		fmt.Println("AddUser Failed", err.Error())
+		ctx.JSON(http.StatusInternalServerError, nil)
+		return
+	}
+	err = user.PostEvent(req.Msg)
+	if err != nil {
+		fmt.Println("PostEvent Failed", err.Error())
+		ctx.JSON(http.StatusInternalServerError, nil)
+		return
+	}
+	ctx.JSON(http.StatusOK, nil)
+}
