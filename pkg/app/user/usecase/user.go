@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 	eventUCase "nostr-ex/pkg/app/event/usecase"
-	"nostr-ex/pkg/app/session"
+	"nostr-ex/pkg/app/session/connector/session"
 	"nostr-ex/pkg/models"
 	"nostr-ex/pkg/token"
 	"sync"

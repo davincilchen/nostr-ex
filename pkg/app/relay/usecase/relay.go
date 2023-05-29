@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 	mqRepo "nostr-ex/pkg/app/rabbitmq/repo"
-	"nostr-ex/pkg/app/session"
+	"nostr-ex/pkg/app/session/connector/session"
 	"nostr-ex/pkg/token"
 )
 
