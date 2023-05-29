@@ -116,9 +116,9 @@ func (t *Session) start() {
 	}
 
 	log.Infof(" %s | closed", t.basicInfo())
-
 	// 暫時作法
 	log.Infof(" %s | retry to connect", t.basicInfo())
+	//TODO: add flag to check exit or not
 
 	for {
 		err := t.Start()

@@ -47,7 +47,7 @@ func PostEvent(ctx *gin.Context) {
 	req := PostEventParam(ctx)
 	url := config.GetRelayUrl()
 
-	m := userUcase.GetUserManager()
+	m := userUcase.GetRelayManager()
 	user, err := m.AddUser(url, req.PubKey, req.PriKey)
 	if err != nil {
 		fmt.Println("AddUser Failed", err.Error())
@@ -98,7 +98,7 @@ func ReqEvent(ctx *gin.Context) {
 	req := CloseReqParam(ctx)
 	url := config.GetRelayUrl()
 
-	m := userUcase.GetUserManager()
+	m := userUcase.GetRelayManager()
 	err := m.ReqEvent(url, req.PubKey)
 	if err != nil {
 		fmt.Println("ReqEvent Failed", err.Error())
@@ -142,7 +142,7 @@ func CloseReqParam(ctx *gin.Context) *CloseReqParams {
 func CloseReq(ctx *gin.Context) {
 	req := CloseReqParam(ctx)
 	url := config.GetRelayUrl()
-	m := userUcase.GetUserManager()
+	m := userUcase.GetRelayManager()
 	err := m.CloseReq(url, req.PubKey)
 	if err != nil {
 		fmt.Println("CloseReq Failed", err.Error())

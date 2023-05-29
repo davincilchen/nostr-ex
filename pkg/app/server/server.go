@@ -81,7 +81,7 @@ func (t *Server) Serve() {
 	defer mq.Close()
 
 	// .. //
-	m := userUcase.GetUserManager()
+	m := userUcase.GetRelayManager()
 	m.AddDefaultListener(config.GetRelayUrl(), "", "")
 
 	logrus.Printf("======= Server start to listen (%s) and serve =======\n", addr)

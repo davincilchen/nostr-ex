@@ -14,14 +14,14 @@ type User struct {
 	privateKey string
 }
 
-type NorstrUser struct {
+type RelayConnector struct {
 	User
 	session        *session.Session
 	SubscriptionID string
 	mux            sync.Mutex
 }
 
-func NewNostrUser(url, pubKey, privateKey string) (*NorstrUser, error) {
+func NewRelayConnector(url, pubKey, privateKey string) (*RelayConnector, error) {
 
 	s := session.NewSession(url)
 
@@ -30,7 +30,7 @@ func NewNostrUser(url, pubKey, privateKey string) (*NorstrUser, error) {
 		return nil, err
 	}
 
-	u := &NorstrUser{
+	u := &RelayConnector{
 		User: User{
 			pubKey:     pubKey,
 			privateKey: privateKey,
@@ -43,13 +43,13 @@ func NewNostrUser(url, pubKey, privateKey string) (*NorstrUser, error) {
 	return u, nil
 }
 
-func (t *NorstrUser) UpdatePrivateKey(privateKey string) {
+func (t *RelayConnector) UpdatePrivateKey(privateKey string) {
 	t.mux.Lock()
 	defer t.mux.Unlock()
 	t.privateKey = privateKey
 }
 
-func (t *NorstrUser) PostEvent(msg string) error {
+func (t *RelayConnector) PostEvent(msg string) error {
 	ms := models.NewMsg(t.pubKey, msg)
 	key := t.GetPrivateKey()
 	event, err := ms.MakeEvent(key)
@@ -71,7 +71,7 @@ func (t *NorstrUser) PostEvent(msg string) error {
 	return nil
 }
 
-func (t *NorstrUser) ReqEvent() error {
+func (t *RelayConnector) ReqEvent() error {
 	t.mux.Lock()
 	defer t.mux.Unlock()
 
@@ -97,7 +97,7 @@ func (t *NorstrUser) ReqEvent() error {
 	return nil
 }
 
-func (t *NorstrUser) CloseReq() error {
+func (t *RelayConnector) CloseReq() error {
 	t.mux.Lock()
 	defer t.mux.Unlock()
 
@@ -118,19 +118,19 @@ func (t *NorstrUser) CloseReq() error {
 	return nil
 }
 
-func (t *NorstrUser) GetPrivateKey() string {
+func (t *RelayConnector) GetPrivateKey() string {
 	t.mux.Lock()
 	defer t.mux.Unlock()
 	return t.privateKey
 }
 
-func (t *NorstrUser) GetSubscriptionID() string {
+func (t *RelayConnector) GetSubscriptionID() string {
 	t.mux.Lock()
 	defer t.mux.Unlock()
 	return t.SubscriptionID
 }
 
-func (t *NorstrUser) OnEvent(subID string, event []byte) {
+func (t *RelayConnector) OnEvent(subID string, event []byte) {
 
 	// jsonData, _ := json.Marshal(msg[2])
 	// if err := json.Unmarshal(jsonData, &event); err != nil {
@@ -155,7 +155,7 @@ func (t *NorstrUser) OnEvent(subID string, event []byte) {
 	// eUCase.SaveEvent(data)
 }
 
-func (t *NorstrUser) OnConnect() {
+func (t *RelayConnector) OnConnect() {
 
 	fmt.Printf("\nOnConnect [my subID = %s] [my pubKey = %s] \n",
 		t.GetSubscriptionID(), t.pubKey)
