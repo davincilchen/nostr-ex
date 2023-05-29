@@ -14,7 +14,7 @@
     </main>
   <script>
     <!--let socket = new WebSocket("wss://relay.nekolicio.us");-->
-    let socket = new WebSocket("ws://127.0.0.1:8100");
+    let socket = new WebSocket("ws://127.0.0.1:8800");
     socket.onopen = function(e) {
       alert("[open] Connection established");
       const req = JSON.stringify(['REQ', '12345x67890y12345z12345a', {'limit': 5}])
