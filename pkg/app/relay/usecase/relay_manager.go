@@ -29,13 +29,11 @@ func GetRelayManager() *RelayManager {
 func (t *RelayManager) AddRelay(url, pubKey, privateKey string) (
 	*RelayConnector, error) {
 
-	rl := t.GetRelay(pubKey)
-	if rl != nil {
-		if privateKey != "" {
-			rl.UpdatePrivateKey(privateKey)
-		}
-		return rl, nil
-	}
+	// rl := t.GetRelay(pubKey)
+	// if rl != nil {
+
+	// 	return rl, nil
+	// }
 
 	u, err := NewRelayConnector(url, pubKey, privateKey)
 	if err != nil {
@@ -43,48 +41,18 @@ func (t *RelayManager) AddRelay(url, pubKey, privateKey string) (
 	}
 
 	t.mux.Lock()
-	t.relayMap[pubKey] = u
+	t.relayMap[url] = u
 	t.mux.Unlock()
 	return u, nil
 }
 
-func (t *RelayManager) GetRelay(pubKey string) *RelayConnector {
+func (t *RelayManager) GetRelay(url string) *RelayConnector {
 
 	t.mux.Lock()
 	defer t.mux.Unlock()
-	ret, ok := t.relayMap[pubKey]
+	ret, ok := t.relayMap[url]
 	if ok {
 		return ret
 	}
 	return nil
-}
-
-func (t *RelayManager) ReqEvent(url, pubKey string) error { //TODO: url
-
-	rl := t.GetRelay(pubKey)
-	if rl == nil {
-		u, err := t.AddRelay(url, pubKey, "")
-		if err != nil {
-			return err
-		}
-		rl = u
-	}
-
-	return rl.ReqEvent()
-
-}
-
-func (t *RelayManager) CloseReq(url, pubKey string) error {
-
-	rl := t.GetRelay(pubKey)
-	if rl == nil {
-		tmp, err := t.AddRelay(url, pubKey, "")
-		if err != nil {
-			return err
-		}
-		rl = tmp
-	}
-
-	return rl.CloseReq()
-
 }
