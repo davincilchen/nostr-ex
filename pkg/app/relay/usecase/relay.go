@@ -7,10 +7,15 @@ import (
 	"nostr-ex/pkg/token"
 )
 
+type Relay struct {
+	ID             int    `json:"id"`
+	SubscriptionID string `json:"sub_id"`
+	URL            string `json:"url"`
+}
+
 type RelayConnector struct {
-	session        *session.Session
-	ID             int
-	SubscriptionID string
+	Relay
+	session *session.Session
 }
 
 func NewRelayConnector(id int, url string) (*RelayConnector, error) {
@@ -18,9 +23,12 @@ func NewRelayConnector(id int, url string) (*RelayConnector, error) {
 	s := session.NewSession(url)
 
 	u := &RelayConnector{
-		ID:             id,
-		SubscriptionID: token.GenUUIDv4String(),
-		session:        s,
+		Relay: Relay{
+			ID:             id,
+			SubscriptionID: token.GenUUIDv4String(),
+			URL:            url,
+		},
+		session: s,
 	}
 
 	s.SetOnEventHandler(u.OnEvent)

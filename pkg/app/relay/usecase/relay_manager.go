@@ -59,3 +59,19 @@ func (t *RelayManager) GetRelay(id int) *RelayConnector {
 	}
 	return nil
 }
+
+func (t *RelayManager) GetRelays() []Relay {
+
+	ret := []Relay{}
+	t.mux.Lock()
+	defer t.mux.Unlock()
+	for i := 0; i <= t.id; i++ {
+		r, ok := t.relayMap[i]
+		if !ok {
+			continue
+		}
+		ret = append(ret, r.Relay)
+	}
+
+	return ret
+}

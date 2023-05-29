@@ -10,6 +10,29 @@ import (
 	dlv "nostr-ex/pkg/delivery"
 )
 
+type RelayListResp struct {
+	Total int                `json:"total_num"`
+	List  []relayUcase.Relay `json:"Relay"`
+}
+
+func GetRelays(ctx *gin.Context) {
+
+	m := relayUcase.GetRelayManager()
+	list := m.GetRelays()
+
+	ctx.JSON(http.StatusOK, nil)
+
+	data := RelayListResp{
+		Total: len(list),
+		List:  list,
+	}
+	response := dlv.ResBody{}
+	response.ResCode = dlv.RES_OK
+	response.Data = data
+
+	ctx.JSON(http.StatusOK, response)
+}
+
 type AddRelayParams struct {
 	URL string
 }

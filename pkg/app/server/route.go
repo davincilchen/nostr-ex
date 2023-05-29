@@ -22,7 +22,8 @@ func Router() *gin.Engine {
 			"title": "Posts",
 		})
 	})
-	router.POST("/relay", relayDlv.AddRelay)
+	router.POST("/relays", relayDlv.AddRelay)
+	router.GET("/relays", relayDlv.GetRelays)
 
 	router.POST("/event", userDlv.PostEvent)
 	router.POST("/event/req", userDlv.ReqEvent)
