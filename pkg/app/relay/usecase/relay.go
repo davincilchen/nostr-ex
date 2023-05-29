@@ -1,7 +1,9 @@
 package usecase
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 	mqRepo "nostr-ex/pkg/app/rabbitmq/repo"
 	"nostr-ex/pkg/app/session"
 	"nostr-ex/pkg/token"
@@ -31,7 +33,7 @@ func NewRelayConnector(id int, url string) (*RelayConnector, error) {
 		session: s,
 	}
 
-	s.SetOnEventHandler(u.OnEvent)
+	s.SetOnMsgHandler(u.OnSocketMsg)
 	s.SetOnConnetHandler(u.OnConnect)
 
 	err := s.Start()
@@ -55,6 +57,38 @@ func (t *RelayConnector) ReqEvent() error {
 
 func (t *RelayConnector) GetSubscriptionID() string {
 	return t.SubscriptionID
+}
+
+func (t *RelayConnector) OnSocketMsg(message []byte) error {
+	var msg []interface{}
+	if err := json.Unmarshal(message, &msg); err != nil {
+		e := fmt.Errorf("Session msgHandle: json unmarshal error:%s", err.Error())
+		return e
+	}
+	// Handle each message type
+	switch msg[0] {
+	case "EVENT":
+		// Parse the event JSON
+		if len(msg) != 3 {
+			break
+		}
+
+		//fmt.Printf("Received event: %+v\n", event)
+		//fmt.Printf("Received event: %s\n", string(jsonData))
+		subID, _ := msg[1].(string)
+		jsonData, _ := json.Marshal(msg[2])
+		t.OnEvent(subID, jsonData)
+
+	case "CLOSE":
+		// Subscription has been closed
+		fmt.Printf("Subscription %s closed\n", msg[1])
+	case "EOSE":
+		fmt.Printf("EOSE %s \n", msg[1])
+	default:
+		log.Printf("Unknown message type: %s\n", msg[0])
+	}
+
+	return nil
 }
 
 func (t *RelayConnector) OnEvent(subID string, event []byte) {

@@ -1,7 +1,6 @@
 package session
 
 import (
-	"encoding/json"
 	"fmt"
 	"runtime/debug"
 	"sync"
@@ -25,8 +24,9 @@ func GenID() int {
 type Session struct {
 	id         int
 	serverAddr string
-	fnOnEvent  func(subID string, event []byte)
+
 	fnOnConnet func()
+	fnOnMsg    func(message []byte) error
 
 	conn  *websocket.Conn
 	mutex sync.Mutex
@@ -140,51 +140,18 @@ func (t *Session) basicInfo() string {
 
 func (t *Session) msgHandle(message []byte) error {
 
-	// Parse the message as a JSON array
-	var msg []interface{}
-	if err := json.Unmarshal(message, &msg); err != nil {
-		e := fmt.Errorf("Session msgHandle: json unmarshal error:%s", err.Error())
-		return e
-	}
-	// Handle each message type
-	switch msg[0] {
-	case "EVENT":
-		// Parse the event JSON
-		if len(msg) != 3 {
-			break
-		}
-
-		//fmt.Printf("Received event: %+v\n", event)
-		//fmt.Printf("Received event: %s\n", string(jsonData))
-		subID, _ := msg[1].(string)
-		jsonData, _ := json.Marshal(msg[2])
-
-		handler := t.getOnEventHandler()
-		if handler != nil {
-			handler(subID, jsonData)
-		}
-	case "CLOSE":
-		// Subscription has been closed
-		fmt.Printf("Subscription %s closed\n", msg[1])
-	case "EOSE":
-		fmt.Printf("EOSE %s \n", msg[1])
-	default:
-		log.Printf("Unknown message type: %s\n", msg[0])
+	if t.fnOnMsg != nil {
+		return t.fnOnMsg(message)
 	}
 
 	return nil
+
 }
 
-func (t *Session) SetOnEventHandler(fn func(subID string, event []byte)) {
+func (t *Session) SetOnMsgHandler(fn func(message []byte) error) {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
-	t.fnOnEvent = fn
-}
-
-func (t *Session) getOnEventHandler() func(subID string, event []byte) {
-	t.mutex.Lock()
-	defer t.mutex.Unlock()
-	return t.fnOnEvent
+	t.fnOnMsg = fn
 }
 
 func (t *Session) SetOnConnetHandler(fn func()) {

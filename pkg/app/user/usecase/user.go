@@ -1,7 +1,9 @@
 package usecase
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 	eventUCase "nostr-ex/pkg/app/event/usecase"
 	"nostr-ex/pkg/app/session"
 	"nostr-ex/pkg/models"
@@ -38,7 +40,7 @@ func NewNostrUser(url, pubKey, privateKey string) (*NorstrUser, error) {
 		session: s,
 	}
 
-	s.SetOnEventHandler(u.OnEvent)
+	s.SetOnMsgHandler(u.OnSocketMsg)
 	s.SetOnConnetHandler(u.OnConnect)
 	return u, nil
 }
@@ -128,6 +130,38 @@ func (t *NorstrUser) GetSubscriptionID() string {
 	t.mux.Lock()
 	defer t.mux.Unlock()
 	return t.SubscriptionID
+}
+
+func (t *NorstrUser) OnSocketMsg(message []byte) error {
+	var msg []interface{}
+	if err := json.Unmarshal(message, &msg); err != nil {
+		e := fmt.Errorf("Session msgHandle: json unmarshal error:%s", err.Error())
+		return e
+	}
+	// Handle each message type
+	switch msg[0] {
+	case "EVENT":
+		// Parse the event JSON
+		if len(msg) != 3 {
+			break
+		}
+
+		//fmt.Printf("Received event: %+v\n", event)
+		//fmt.Printf("Received event: %s\n", string(jsonData))
+		subID, _ := msg[1].(string)
+		jsonData, _ := json.Marshal(msg[2])
+		t.OnEvent(subID, jsonData)
+
+	case "CLOSE":
+		// Subscription has been closed
+		fmt.Printf("Subscription %s closed\n", msg[1])
+	case "EOSE":
+		fmt.Printf("EOSE %s \n", msg[1])
+	default:
+		log.Printf("Unknown message type: %s\n", msg[0])
+	}
+
+	return nil
 }
 
 func (t *NorstrUser) OnEvent(subID string, event []byte) {
