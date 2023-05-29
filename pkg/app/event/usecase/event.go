@@ -12,7 +12,7 @@ func NewEventHandler() *Handler {
 	return &Handler{}
 }
 
-func (t *Handler) SaveEvent(data models.Event) error {
+func (t *Handler) SaveEvent(data *models.Event) error {
 	return repo.SaveEvent(data)
 }
 

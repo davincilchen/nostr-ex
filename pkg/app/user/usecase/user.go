@@ -183,7 +183,7 @@ func (t *NorstrUser) OnEvent(subID string, event []byte) {
 		SubID: subID,
 		Data:  string(event),
 	}
-	eUCase.SaveEvent(data)
+	eUCase.SaveEvent(&data)
 }
 
 func (t *NorstrUser) OnConnect() {

@@ -15,6 +15,14 @@ func Init(url, qName string) error {
 		return err
 	}
 	pubManager = manager
+
+	//TODO: 暫時做法
+	m2, err := newPubManager(url, "DBEvent")
+	if err != nil {
+		return err
+	}
+	pubDBWriteDone = m2
+
 	return nil
 }
 
@@ -51,4 +59,12 @@ func (t *PubManager) Close() error {
 	t.connector.DisConnect()
 	return nil
 
+}
+
+//TODO: 暫時做法
+
+var pubDBWriteDone *PubManager
+
+func GetDBPublisher() *PubManager {
+	return pubDBWriteDone
 }

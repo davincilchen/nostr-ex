@@ -17,13 +17,13 @@ func GetMainDB() (*gorm.DB, error) {
 	return db, nil
 }
 
-func SaveEvent(data models.Event) error {
+func SaveEvent(data *models.Event) error {
 	db, err := GetMainDB()
 	if err != nil {
 		return err
 	}
 
-	dbc := db.Create(&data)
+	dbc := db.Create(data)
 	return dbc.Error
 }
 

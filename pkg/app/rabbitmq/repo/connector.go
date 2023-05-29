@@ -122,8 +122,10 @@ func (t *Connector) StartConsumer() error {
 				SubID: "", //TODO:
 				Data:  string(d.Body),
 			}
-			eUCase.SaveEvent(data)
-
+			eUCase.SaveEvent(&data)
+			fmt.Printf("%#v", data)
+			// mq := mqRepo.GetDBPublisher()
+			// mq.Send(data.ID)
 		}
 
 		fmt.Println("Message queue consumer stop")
@@ -155,7 +157,7 @@ func (t *Connector) Send(data []byte) error {
 		return fmt.Errorf("%s %s", err, "Failed to publish a message")
 	}
 
-	fmt.Printf(" [x] Sent to MQ %s\n", data)
+	fmt.Printf(" [E] Sent to MQ %s\n", data)
 
 	return nil
 }

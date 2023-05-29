@@ -79,6 +79,8 @@ func (t *Server) Serve() {
 	}
 	mq := mqRepo.GetPubManager()
 	defer mq.Close()
+	mq2 := mqRepo.GetDBPublisher() //TODO:
+	defer mq2.Close()
 
 	// .. //
 	m := relayUcase.GetRelayManager()
