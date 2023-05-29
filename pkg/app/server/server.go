@@ -82,7 +82,7 @@ func (t *Server) Serve() {
 
 	// .. //
 	m := relayUcase.GetRelayManager()
-	m.AddRelay(config.GetRelayUrl(), "", "")
+	m.AddRelay(config.GetRelayUrl())
 
 	logrus.Printf("======= Server start to listen (%s) and serve =======\n", addr)
 	r := Router()

@@ -13,11 +13,12 @@ type RelayConnector struct {
 	SubscriptionID string
 }
 
-func NewRelayConnector(url, pubKey, privateKey string) (*RelayConnector, error) {
+func NewRelayConnector(id int, url string) (*RelayConnector, error) {
 
 	s := session.NewSession(url)
 
 	u := &RelayConnector{
+		ID:             id,
 		SubscriptionID: token.GenUUIDv4String(),
 		session:        s,
 	}
