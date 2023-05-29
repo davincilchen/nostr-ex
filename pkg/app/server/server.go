@@ -13,7 +13,7 @@ import (
 	gormlogger "gorm.io/gorm/logger"
 
 	mqRepo "nostr-ex/pkg/app/rabbitmq/repo"
-	userUcase "nostr-ex/pkg/app/user/usecase"
+	relayUcase "nostr-ex/pkg/app/relay/usecase"
 	"nostr-ex/pkg/config"
 	"nostr-ex/pkg/db"
 	"nostr-ex/pkg/models"
@@ -81,7 +81,7 @@ func (t *Server) Serve() {
 	defer mq.Close()
 
 	// .. //
-	m := userUcase.GetRelayManager()
+	m := relayUcase.GetRelayManager()
 	m.AddDefaultListener(config.GetRelayUrl(), "", "")
 
 	logrus.Printf("======= Server start to listen (%s) and serve =======\n", addr)

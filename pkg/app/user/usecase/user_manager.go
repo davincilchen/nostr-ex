@@ -4,31 +4,31 @@ import (
 	"sync"
 )
 
-type RelayManager struct {
-	relayMap map[string]*RelayConnector //KEY: public key
-	mux      sync.Mutex
+type UserManager struct {
+	userMap map[string]*NorstrUser //KEY: public key
+	mux     sync.Mutex
 }
 
-var relayManager *RelayManager
+var userManager *UserManager
 
-func newRelayManager() *RelayManager {
-	s := &RelayManager{}
-	s.relayMap = make(map[string]*RelayConnector)
+func newUserManager() *UserManager {
+	s := &UserManager{}
+	s.userMap = make(map[string]*NorstrUser)
 
 	return s
 }
 
-func GetRelayManager() *RelayManager {
-	if relayManager == nil {
-		relayManager = newRelayManager()
+func GetUserManager() *UserManager {
+	if userManager == nil {
+		userManager = newUserManager()
 
 	}
-	return relayManager
+	return userManager
 }
 
-func (t *RelayManager) AddDefaultListener(url, pubKey, privateKey string) (
-	*RelayConnector, error) {
-	u, err := t.AddRelay(url, pubKey, privateKey) //TODO: graceful shutdown, delete thread
+func (t *UserManager) AddDefaultListener(url, pubKey, privateKey string) (
+	*NorstrUser, error) {
+	u, err := t.AddUser(url, pubKey, privateKey) //TODO: graceful shutdown, delete thread
 	if err != nil {
 		return nil, err
 	}
@@ -38,65 +38,65 @@ func (t *RelayManager) AddDefaultListener(url, pubKey, privateKey string) (
 
 }
 
-func (t *RelayManager) AddRelay(url, pubKey, privateKey string) (
-	*RelayConnector, error) {
+func (t *UserManager) AddUser(url, pubKey, privateKey string) (
+	*NorstrUser, error) {
 
-	rl := t.GetRelay(pubKey)
-	if rl != nil {
+	user := t.GetUser(pubKey)
+	if user != nil {
 		if privateKey != "" {
-			rl.UpdatePrivateKey(privateKey)
+			user.UpdatePrivateKey(privateKey)
 		}
-		return rl, nil
+		return user, nil
 	}
 
-	u, err := NewRelayConnector(url, pubKey, privateKey)
+	u, err := NewNostrUser(url, pubKey, privateKey)
 	if err != nil {
 		return nil, err
 	}
 
 	t.mux.Lock()
-	t.relayMap[pubKey] = u
+	t.userMap[pubKey] = u
 	t.mux.Unlock()
 	return u, nil
 }
 
-func (t *RelayManager) GetRelay(pubKey string) *RelayConnector {
+func (t *UserManager) GetUser(pubKey string) *NorstrUser {
 
 	t.mux.Lock()
 	defer t.mux.Unlock()
-	ret, ok := t.relayMap[pubKey]
+	user, ok := t.userMap[pubKey]
 	if ok {
-		return ret
+		return user
 	}
 	return nil
 }
 
-func (t *RelayManager) ReqEvent(url, pubKey string) error { //TODO: url
+func (t *UserManager) ReqEvent(url, pubKey string) error { //TODO: url
 
-	rl := t.GetRelay(pubKey)
-	if rl == nil {
-		u, err := t.AddRelay(url, pubKey, "")
+	user := t.GetUser(pubKey)
+	if user == nil {
+		u, err := t.AddUser(url, pubKey, "")
 		if err != nil {
 			return err
 		}
-		rl = u
+		user = u
 	}
 
-	return rl.ReqEvent()
+	return user.ReqEvent()
 
 }
 
-func (t *RelayManager) CloseReq(url, pubKey string) error {
+func (t *UserManager) CloseReq(url, pubKey string) error {
 
-	rl := t.GetRelay(pubKey)
-	if rl == nil {
-		tmp, err := t.AddRelay(url, pubKey, "")
+	user := t.GetUser(pubKey)
+	if user == nil {
+		u, err := t.AddUser(url, pubKey, "")
 		if err != nil {
 			return err
 		}
-		rl = tmp
+		user = u
 	}
 
-	return rl.CloseReq()
+	return user.CloseReq()
 
 }
