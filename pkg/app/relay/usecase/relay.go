@@ -5,14 +5,12 @@ import (
 	mqRepo "nostr-ex/pkg/app/rabbitmq/repo"
 	"nostr-ex/pkg/app/session"
 	"nostr-ex/pkg/token"
-	"sync"
 )
 
 type RelayConnector struct {
 	session        *session.Session
 	ID             int
 	SubscriptionID string
-	mux            sync.Mutex
 }
 
 func NewRelayConnector(url, pubKey, privateKey string) (*RelayConnector, error) {
@@ -20,7 +18,8 @@ func NewRelayConnector(url, pubKey, privateKey string) (*RelayConnector, error) 
 	s := session.NewSession(url)
 
 	u := &RelayConnector{
-		session: s,
+		SubscriptionID: token.GenUUIDv4String(),
+		session:        s,
 	}
 
 	s.SetOnEventHandler(u.OnEvent)
@@ -35,55 +34,17 @@ func NewRelayConnector(url, pubKey, privateKey string) (*RelayConnector, error) 
 }
 
 func (t *RelayConnector) ReqEvent() error {
-	t.mux.Lock()
-	defer t.mux.Unlock()
 
-	if t.SubscriptionID != "" {
-		req := []interface{}{"REQ", t.SubscriptionID, ""}
-		e := t.session.WriteJson(req)
-		if e != nil {
-			return e
-		}
-		return nil
-	}
-
-	id := token.GenUUIDv4String()
-	req := []interface{}{"REQ", id, ""}
-
+	req := []interface{}{"REQ", t.GetSubscriptionID(), ""}
 	e := t.session.WriteJson(req)
-
 	if e != nil {
 		return e
 	}
-
-	t.SubscriptionID = id
 	return nil
-}
 
-func (t *RelayConnector) CloseReq() error {
-	t.mux.Lock()
-	defer t.mux.Unlock()
-
-	if t.SubscriptionID == "" {
-		return nil
-	}
-
-	req := []interface{}{"CLOSE", t.SubscriptionID}
-
-	e := t.session.WriteJson(req)
-
-	if e != nil {
-		return e
-	}
-
-	t.SubscriptionID = ""
-
-	return nil
 }
 
 func (t *RelayConnector) GetSubscriptionID() string {
-	t.mux.Lock()
-	defer t.mux.Unlock()
 	return t.SubscriptionID
 }
 
@@ -104,12 +65,6 @@ func (t *RelayConnector) OnEvent(subID string, event []byte) {
 	mq := mqRepo.GetPubManager()
 	mq.Send(event) //TODO: handle error
 
-	// eUCase := eventUCase.NewEventHandler()
-	// data := models.Event{
-	// 	SubID: subID,
-	// 	Data:  string(event),
-	// }
-	// eUCase.SaveEvent(data)
 }
 
 func (t *RelayConnector) OnConnect() {
