@@ -19,3 +19,7 @@ func (t *Handler) SaveEvent(data *models.Event) error {
 func (t *Handler) GetEvent(limit int) []models.Event {
 	return repo.GetEvent(limit)
 }
+
+func (t *Handler) GetLastEvent() *models.Event {
+	return repo.GetLastEvent()
+}

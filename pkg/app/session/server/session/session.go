@@ -9,6 +9,8 @@ import (
 
 	"github.com/gorilla/websocket"
 	log "github.com/sirupsen/logrus"
+
+	eventUCase "nostr-ex/pkg/app/event/usecase"
 )
 
 var id = 0
@@ -29,6 +31,9 @@ type Session struct {
 
 	subID  *string
 	mutSub sync.RWMutex
+
+	// TODO:
+	dbID int
 }
 
 func NewSession(conn *websocket.Conn) *Session {
@@ -144,6 +149,11 @@ func (t *Session) msgHandle(message []byte) error {
 		if ok {
 			t.setSubID(&tmp)
 		}
+
+		// TODO :
+		eUCase := eventUCase.NewEventHandler()
+		event := eUCase.GetLastEvent()
+		t.dbID = int(event.ID)
 
 		t.WriteJson([]interface{}{"EOSE", tmp})
 	case "CLOSE":

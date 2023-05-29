@@ -37,3 +37,14 @@ func GetEvent(limit int) []models.Event {
 	db.Find(ret).Limit(limit)
 	return ret
 }
+
+func GetLastEvent() *models.Event {
+	var ret models.Event
+	db, err := GetMainDB()
+	if err != nil {
+		return nil
+	}
+
+	db.Last(&ret)
+	return &ret
+}
