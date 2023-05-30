@@ -5,3 +5,9 @@ session lock
 
 R/W session瓶緊
 batch save
+
+alive 
+re-order  
+check sign
+
+
