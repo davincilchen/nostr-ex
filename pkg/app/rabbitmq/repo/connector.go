@@ -124,7 +124,7 @@ func (t *Connector) StartConsumer() error {
 				Data:  string(d.Body),
 			}
 			eUCase.SaveEvent(&data)
-			fmt.Printf("%#v", data)
+			fmt.Printf("%#v\n", data)
 
 			session.ForEachSession(func(s session.SessionF) {
 				s.OnDBDone()

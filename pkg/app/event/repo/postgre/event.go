@@ -56,6 +56,6 @@ func GetEventFrom(id int) []models.Event {
 		return ret
 	}
 
-	db.Where("ID >?", id).Find(ret)
+	db.Where("ID >?", id).Find(&ret)
 	return ret
 }

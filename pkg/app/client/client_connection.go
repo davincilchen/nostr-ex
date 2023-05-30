@@ -8,6 +8,7 @@ import (
 
 	eventUCase "nostr-ex/pkg/app/event/usecase"
 	"nostr-ex/pkg/app/session/server/session"
+	"nostr-ex/pkg/models"
 
 	"github.com/gorilla/websocket"
 )
@@ -121,4 +122,19 @@ func (t *ClientConnection) OnSocketMsg(message []byte) error {
 
 func (t *ClientConnection) OnDBDone() {
 	fmt.Println("================= OnDBDone =================")
+	if t.curDBID < 0 {
+		return
+	}
+	list := t.eventHandler.GetEventFrom(t.curDBID)
+	for _, v := range list {
+		// Parse the event JSON
+		var msg models.Msg
+		if err := json.Unmarshal([]byte(v.Data), &msg); err != nil {
+			//TODO:
+			continue
+		}
+
+		t.WriteJson( //use routine
+			[]interface{}{"EVENT", t.getSubID(), msg})
+	}
 }

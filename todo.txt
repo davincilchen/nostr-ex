@@ -4,3 +4,4 @@ len msg check
 session lock
 
 R/W session瓶緊
+batch save
