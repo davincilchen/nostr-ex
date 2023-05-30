@@ -1,50 +1,26 @@
 package session
 
 import (
-	"encoding/json"
 	"fmt"
 	"sync"
 
-	"nostr-ex/pkg/models"
-
 	"github.com/gorilla/websocket"
 	log "github.com/sirupsen/logrus"
-
-	eventUCase "nostr-ex/pkg/app/event/usecase"
 )
-
-var id = 0
-var mu sync.Mutex
-
-func GenID() int {
-	mu.Lock()
-	defer mu.Unlock()
-	id++
-	return id
-}
 
 // .. //
 type Session struct {
+	fnOnMsg func(message []byte) error
+
 	id    int
 	conn  *websocket.Conn
 	mutex sync.Mutex
-
-	subID  *string
-	mutSub sync.RWMutex
-
-	// TODO:
-	dbID         int
-	eventHandler *eventUCase.Handler
 }
 
-func NewSession(conn *websocket.Conn) *Session {
-	id := GenID()
-	fmt.Println("NewSession id:", id)
+func NewSession(conn *websocket.Conn, id int) *Session {
 	return &Session{
-		id:           id,
-		conn:         conn,
-		dbID:         -1,
-		eventHandler: eventUCase.NewEventHandler(),
+		id:   id,
+		conn: conn,
 	}
 }
 
@@ -66,12 +42,18 @@ func (t *Session) WriteJson(v interface{}) error {
 	return t.conn.WriteJSON(v)
 }
 
+func (t *Session) SetOnMsgHandler(fn func(message []byte) error) {
+	t.mutex.Lock()
+	defer t.mutex.Unlock()
+	t.fnOnMsg = fn
+}
+
 func (t *Session) ID() int {
 	return t.id
 }
 func (t *Session) Start() {
-
-	trackSession(t, true)
+	//enableKeepActive //TODO:
+	//trackSession(t, true) //TODO: 2023.05.30
 	for {
 		_, data, err := t.conn.ReadMessage()
 		if err != nil {
@@ -103,97 +85,8 @@ func (t *Session) basicInfo() string {
 // TODO: add structure
 func (t *Session) msgHandle(message []byte) error {
 
-	// Parse the message as a JSON array
-	var msg []interface{}
-	if err := json.Unmarshal(message, &msg); err != nil {
-		e := fmt.Errorf("Session msgHandle: json unmarshal error:%s", err.Error())
-		return e
+	if t.fnOnMsg == nil {
+		panic("fnOnMsg == nil")
 	}
-	// Handle each message type
-	switch msg[0] {
-	case "EVENT":
-		// Parse the event JSON
-		var event models.Msg
-		jsonData, _ := json.Marshal(msg[1])
-		if err := json.Unmarshal(jsonData, &event); err != nil {
-			e := fmt.Errorf("Session msgHandle: json unmarshal error:%s", err.Error())
-			return e
-		}
-		// Print the event data
-		fmt.Printf("Received event in session ID %d : %+v\n", t.ID(), event)
-
-		ForEachSession(func(s SessionF) {
-			s.OnEvent(t.ID(), event)
-		})
-
-	case "REQ":
-		// Subscription has been closed
-		fmt.Printf("Subscription %s req\n", msg[1])
-
-		tmp, ok := msg[1].(string)
-		if ok {
-			t.setSubID(&tmp)
-		}
-
-		event := t.eventHandler.GetLastEvent()
-		if event != nil {
-			t.dbID = int(event.ID)
-		}
-
-		t.WriteJson([]interface{}{"EOSE", tmp})
-	case "CLOSE":
-		// Subscription has been closed
-		fmt.Printf("Subscription %s closed\n", msg[1])
-		t.setSubID(nil)
-	case "EOSE":
-		fmt.Printf("EOSE  \n")
-	default:
-		log.Printf("Unknown message type: %s\n", msg[0])
-	}
-
-	return nil
-}
-
-func (t *Session) setSubID(subID *string) {
-	t.mutSub.Lock()
-	defer t.mutSub.Unlock()
-
-	t.subID = subID
-}
-
-func (t *Session) getSubID() *string {
-	t.mutSub.RLock()
-	defer t.mutSub.RUnlock()
-
-	return t.subID
-}
-
-func (t *Session) IsReq() bool {
-	t.mutSub.RLock()
-	defer t.mutSub.RUnlock()
-
-	return t.subID != nil
-}
-
-func (t *Session) OnDBDone() {
-	fmt.Println("================= OnDBDone =================")
-}
-
-func (t *Session) OnEvent(fromID int, event models.Msg) error {
-
-	subID := t.getSubID()
-	if t.ID() != fromID { //不是自己
-		if subID == nil { //沒訂閱
-			return nil
-		}
-	}
-
-	if subID == nil { //自己
-		return t.WriteJson(
-			[]interface{}{"EVENT", "0", event})
-	}
-	id := *subID
-	return t.WriteJson(
-		[]interface{}{"EVENT", id, event})
-
+	return t.fnOnMsg(message)
 }

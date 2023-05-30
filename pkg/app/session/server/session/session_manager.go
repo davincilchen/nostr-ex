@@ -2,7 +2,6 @@ package session
 
 import (
 	"fmt"
-	"nostr-ex/pkg/models"
 	"sync"
 )
 
@@ -10,8 +9,7 @@ type SessionF interface {
 	ID() int
 	Start()
 	Close()
-	OnEvent(fromID int, event models.Msg) error
-	OnDBDone() 
+	OnDBDone()
 }
 
 var allSession map[SessionF]struct{}
@@ -21,7 +19,7 @@ func init() {
 	allSession = make(map[SessionF]struct{})
 }
 
-func trackSession(s SessionF, add bool) {
+func TrackSession(s SessionF, add bool) {
 
 	allSessionMu.Lock()
 	defer allSessionMu.Unlock()
@@ -56,6 +54,6 @@ func CountSession() int {
 
 func DeleteSession(s SessionF) error {
 	fmt.Println("DeleteSession")
-	trackSession(s, false)
+	TrackSession(s, false)
 	return nil
 }

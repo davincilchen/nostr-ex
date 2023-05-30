@@ -1,0 +1,6 @@
+Shutdown
+len msg check
+
+session lock
+
+R/W session瓶緊

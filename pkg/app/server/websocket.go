@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"runtime/debug"
 
+	"nostr-ex/pkg/app/client"
 	"nostr-ex/pkg/app/session/server/session"
 
 	"github.com/gin-gonic/gin"
@@ -26,7 +27,7 @@ func SocketHandler(c *gin.Context) {
 		panic(err) //TODO:
 	}
 
-	s := session.NewSession(ws)
+	s := client.NewClientConnection(ws)
 	//s.Start()
 
 	defer func() {
@@ -36,8 +37,8 @@ func SocketHandler(c *gin.Context) {
 		}
 	}()
 
-	fmt.Printf("session %d is connected\n", s.ID())
-	defer fmt.Printf("session %d is disconnected\n", s.ID())
+	fmt.Printf("SocketHandler session %d is connected\n", s.ID())
+	defer fmt.Printf("SocketHandler session %d is disconnected\n", s.ID())
 
 	session.WaitGroup.Add(1)
 	defer func() {
@@ -55,6 +56,7 @@ func SocketHandler(c *gin.Context) {
 		session.WaitGroup.Done()
 	}()
 
+	session.TrackSession(s, true)
 	s.Start()
 
 }

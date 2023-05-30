@@ -4,30 +4,68 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"nostr-ex/pkg/models"
+	"sync"
 
 	eventUCase "nostr-ex/pkg/app/event/usecase"
 	"nostr-ex/pkg/app/session/server/session"
+
+	"github.com/gorilla/websocket"
 )
 
-// import (
+var id = 0
+var mu sync.Mutex
 
-// )
+func GenID() int {
+	mu.Lock()
+	defer mu.Unlock()
+	id++
+	return id
+}
 
 type ClientConnection struct {
 	session.Session
-	subID        *string
+
+	mutSub sync.RWMutex
+	subID  *string
+
 	curDBID      int
 	eventHandler *eventUCase.Handler
 }
 
+func NewClientConnection(conn *websocket.Conn) *ClientConnection {
+	id := GenID()
+	fmt.Println("NewClientConnection id:", id)
+	c := &ClientConnection{
+		Session:      *session.NewSession(conn, id),
+		curDBID:      -1,
+		eventHandler: eventUCase.NewEventHandler(),
+	}
+
+	c.SetOnMsgHandler(c.OnSocketMsg)
+
+	return c
+}
+
 func (t *ClientConnection) setSubID(subID *string) {
+	t.mutSub.Lock()
+	defer t.mutSub.Unlock()
+
 	t.subID = subID
 }
 
-// func (t *ClientConnection) getSubID() *string {
-// 	return t.subID
-// }
+func (t *ClientConnection) getSubID() *string {
+	t.mutSub.RLock()
+	defer t.mutSub.RUnlock()
+
+	return t.subID
+}
+
+func (t *ClientConnection) IsReq() bool {
+	t.mutSub.RLock()
+	defer t.mutSub.RUnlock()
+
+	return t.subID != nil
+}
 
 func (t *ClientConnection) OnSocketMsg(message []byte) error {
 	// Parse the message as a JSON array
@@ -36,8 +74,8 @@ func (t *ClientConnection) OnSocketMsg(message []byte) error {
 		e := fmt.Errorf("OnSocketMsg: json unmarshal error:%s", err.Error())
 		return e
 	}
-	if len(msg) < 3 {
-		e := fmt.Errorf("OnSocketMsg: len(msg) <3")
+	if len(msg) < 1 {
+		e := fmt.Errorf("OnSocketMsg: len(msg) <1")
 		return e
 	}
 	// Handle each message type
@@ -45,13 +83,15 @@ func (t *ClientConnection) OnSocketMsg(message []byte) error {
 	case "EVENT":
 		fmt.Printf("Received event in session ID %d : %s %s\n", t.ID(), msg[1], msg[2])
 	case "REQ":
-
+		if len(msg) < 2 {
+			e := fmt.Errorf("OnSocketMsg: len(msg) <2")
+			return e
+		}
 		fmt.Printf("Subscription %s req\n", msg[1])
-
+		t.curDBID = -1
 		tmp, ok := msg[1].(string)
 		if !ok {
 			t.setSubID(nil)
-			t.curDBID = -1
 			break
 		}
 		t.setSubID(&tmp)
@@ -63,6 +103,10 @@ func (t *ClientConnection) OnSocketMsg(message []byte) error {
 		t.WriteJson([]interface{}{"EOSE", tmp})
 	case "CLOSE":
 		// Subscription has been closed
+		if len(msg) < 2 {
+			e := fmt.Errorf("OnSocketMsg: len(msg) <2")
+			return e
+		}
 		fmt.Printf("Subscription %s closed\n", msg[1])
 		t.setSubID(nil)
 		t.curDBID = -1
@@ -74,45 +118,6 @@ func (t *ClientConnection) OnSocketMsg(message []byte) error {
 
 	return nil
 }
-
-func (t *ClientConnection) OnEvent(fromID int, event models.Msg) error {
-
-	return nil
-	// subID := t.getSubID()
-	// if t.ID() != fromID { //不是自己
-	// 	if subID == nil { //沒訂閱
-	// 		return nil
-	// 	}
-	// }
-
-	// if subID == nil { //自己
-	// 	return t.WriteJson(
-	// 		[]interface{}{"EVENT", "0", event})
-	// }
-	// id := *subID
-	// return t.WriteJson(
-	// 	[]interface{}{"EVENT", id, event})
-
-}
-
-// func (t *Client) OnEvent(subID string, event []byte) {
-
-// 	// jsonData, _ := json.Marshal(msg[2])
-// 	// if err := json.Unmarshal(jsonData, &event); err != nil {
-// 	// 	//if err := json.Unmarshal([]byte(msg[1].(string)), &event); err != nil {
-// 	// 	//if err := json.Unmarshal([]byte(msg[2].(string)), &event); err != nil {
-// 	// 	e := fmt.Errorf("Session msgHandle: json unmarshal error:%s", err.Error())
-// 	// 	return e
-// 	// }
-// 	//fmt.Printf("Received event: %s\n", string(jsonData))
-
-// 	fmt.Printf("\nOnEvent [ID = %d] [my subID = %s]  : %s\n",
-// 		t.ID, subID, event) //TODO: delete
-
-// 	mq := mqRepo.GetPubManager()
-// 	mq.Send(event) //TODO: handle error
-
-// }
 
 func (t *ClientConnection) OnDBDone() {
 	fmt.Println("================= OnDBDone =================")
