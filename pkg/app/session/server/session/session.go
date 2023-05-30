@@ -33,38 +33,19 @@ type Session struct {
 	mutSub sync.RWMutex
 
 	// TODO:
-	dbID int
+	dbID         int
+	eventHandler *eventUCase.Handler
 }
 
 func NewSession(conn *websocket.Conn) *Session {
 	id := GenID()
 	fmt.Println("NewSession id:", id)
 	return &Session{
-		id:   id,
-		conn: conn,
+		id:           id,
+		conn:         conn,
+		dbID:         -1,
+		eventHandler: eventUCase.NewEventHandler(),
 	}
-}
-
-func (t *Session) OnDBDone() {
-	fmt.Println("OnDBDone =================")
-}
-func (t *Session) OnEvent(fromID int, event models.Msg) error {
-
-	subID := t.getSubID()
-	if t.ID() != fromID { //不是自己
-		if subID == nil { //沒訂閱
-			return nil
-		}
-	}
-
-	if subID == nil { //自己
-		return t.WriteJson(
-			[]interface{}{"EVENT", "0", event})
-	}
-	id := *subID
-	return t.WriteJson(
-		[]interface{}{"EVENT", id, event})
-
 }
 
 // func (t *Session) WriteMessage(messageType int, data []byte) error {
@@ -119,6 +100,7 @@ func (t *Session) basicInfo() string {
 	return fmt.Sprintf("%15d", t.ID())
 }
 
+// TODO: add structure
 func (t *Session) msgHandle(message []byte) error {
 
 	// Parse the message as a JSON array
@@ -153,10 +135,10 @@ func (t *Session) msgHandle(message []byte) error {
 			t.setSubID(&tmp)
 		}
 
-		// TODO :
-		eUCase := eventUCase.NewEventHandler()
-		event := eUCase.GetLastEvent()
-		t.dbID = int(event.ID)
+		event := t.eventHandler.GetLastEvent()
+		if event != nil {
+			t.dbID = int(event.ID)
+		}
 
 		t.WriteJson([]interface{}{"EOSE", tmp})
 	case "CLOSE":
@@ -191,4 +173,27 @@ func (t *Session) IsReq() bool {
 	defer t.mutSub.RUnlock()
 
 	return t.subID != nil
+}
+
+func (t *Session) OnDBDone() {
+	fmt.Println("================= OnDBDone =================")
+}
+
+func (t *Session) OnEvent(fromID int, event models.Msg) error {
+
+	subID := t.getSubID()
+	if t.ID() != fromID { //不是自己
+		if subID == nil { //沒訂閱
+			return nil
+		}
+	}
+
+	if subID == nil { //自己
+		return t.WriteJson(
+			[]interface{}{"EVENT", "0", event})
+	}
+	id := *subID
+	return t.WriteJson(
+		[]interface{}{"EVENT", id, event})
+
 }
