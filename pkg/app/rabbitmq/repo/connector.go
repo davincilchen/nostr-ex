@@ -23,6 +23,7 @@ type Connector struct {
 	url   string
 	qName string
 
+	//metrics *Metrics
 	conn    *amqp.Connection
 	channel *amqp.Channel
 	queue   *amqp.Queue
@@ -32,13 +33,13 @@ func NewConnector(url, qName string) *Connector {
 	s := &Connector{
 		url:   url,
 		qName: qName,
+		//metrics: NewMetrics("rabbit queue publisher"), //TODO:
 	}
 
 	return s
 }
 
 func (t *Connector) Connect() error {
-
 	conn, err := amqp.Dial(t.url)
 	if err != nil {
 		return fmt.Errorf("%s %s", err, "Failed to connect to RabbitMQ")
@@ -115,7 +116,7 @@ func (t *Connector) StartConsumer() error {
 
 	go func() {
 		ctx := context.Background()
-		metrics := NewConsumerMetrics("rabbit queue consumer")
+		metrics := NewMetrics("rabbit queue consumer")
 		eUCase := eventUCase.NewEventHandler()
 		for d := range msgs {
 			//TODO: delete log
@@ -153,7 +154,20 @@ func (t *Connector) StartConsumer() error {
 }
 
 func (t *Connector) Send(data []byte) error {
-	err := t.ConnectStatus()
+
+	// t1 := time.Now()
+	// ctx := context.Background()
+	// defer t.metrics.Duration(ctx, t1)
+	var err error
+	defer func() {
+		// if err != nil {
+		// 	t.metrics.Fail(ctx)
+		// } else {
+		// 	t.metrics.Success(ctx)
+		// }
+	}()
+
+	err = t.ConnectStatus()
 	if err != nil {
 		return err
 	}

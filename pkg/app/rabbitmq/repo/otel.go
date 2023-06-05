@@ -2,6 +2,7 @@ package repo
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -10,7 +11,7 @@ import (
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 )
 
-func NewConsumerMetrics(meterName string) *Metrics {
+func NewMetrics(meterName string) *Metrics {
 	exporter, err := prometheus.New()
 	if err != nil {
 		log.Fatal(err)
@@ -18,17 +19,24 @@ func NewConsumerMetrics(meterName string) *Metrics {
 	provider := sdkmetric.NewMeterProvider(sdkmetric.WithReader(exporter))
 	meter := provider.Meter(meterName)
 
-	success, err := meter.Int64Counter("success_counter", metric.WithDescription("how many process success"))
+	s := ""
+	s2 := ""
+	s = fmt.Sprintf("%s success_counter", meterName)
+	s2 = fmt.Sprintf("%s: how many process success", meterName)
+	success, err := meter.Int64Counter(s, metric.WithDescription(s2))
+	if err != nil {
+		log.Fatal(err) //TODO:
+	}
+	s = fmt.Sprintf("%s fail_counter", meterName)
+	s2 = fmt.Sprintf("%s: how many process fail", meterName)
+	fail, err := meter.Int64Counter(s, metric.WithDescription(s2))
 	if err != nil {
 		log.Fatal(err) //TODO:
 	}
 
-	fail, err := meter.Int64Counter("fail_counter", metric.WithDescription("how many process fail"))
-	if err != nil {
-		log.Fatal(err) //TODO:
-	}
-
-	duration, err := meter.Int64Histogram("duration_in_milliseconds", metric.WithDescription("duration of process"))
+	s = fmt.Sprintf("%s duration_in_milliseconds", meterName)
+	s2 = fmt.Sprintf("%s: duration of process", meterName)
+	duration, err := meter.Int64Histogram(s, metric.WithDescription(s2))
 	if err != nil {
 		log.Fatal(err) //TODO:
 	}
