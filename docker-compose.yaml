@@ -20,7 +20,7 @@ services:
     image: jaegertracing/all-in-one:latest
     ports:
       - "16686:16686"
-      - "8900" # ori 14268"
+      - "14268" # ori 14268"
       - "14250"
       - "6831:6831/udp"
 
@@ -36,7 +36,7 @@ services:
       - "13133:13133" # health_check extension
       - "4317:4317"   # OTLP gRPC receiver
       - "55679:55679" # zpages extension
-      - "8900:14268"  # ori 14268:14268"
+      - "14268:14268"  # ori 14268:14268"
     depends_on:
       - jaeger-all-in-one
 
