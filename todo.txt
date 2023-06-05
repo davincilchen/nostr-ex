@@ -12,3 +12,4 @@ check sign
 
 try fake event
 
+https://uptrace.dev/opentelemetry/prometheus-metrics.html#prometheus-exporter
