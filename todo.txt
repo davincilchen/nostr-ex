@@ -13,3 +13,4 @@ check sign
 try fake event
 
 https://uptrace.dev/opentelemetry/prometheus-metrics.html#prometheus-exporter
+https://uptrace.dev/get/monitor/opentelemetry-postgresql.html
