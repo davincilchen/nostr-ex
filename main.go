@@ -3,20 +3,20 @@ package main
 import (
 	"nostr-ex/pkg/app/server"
 	"nostr-ex/pkg/config"
-	// _ "github.com/go-sql-driver/mysql"
+	//_ "github.com/go-sql-driver/mysql"
 	// "go.opentelemetry.io/otel/exporters/prometheus"
 	// "go.opentelemetry.io/otel/metric/global"
 	// controller "go.opentelemetry.io/otel/sdk/metric/controller/basic"
-	//"go.opentelemetry.io/otel/sdk/metric/export/aggregation"
-	//processor "go.opentelemetry.io/otel/sdk/metric/processor/basic"
-	//selector "go.opentelemetry.io/otel/sdk/metric/selector/simple"
+	// //"go.opentelemetry.io/otel/sdk/metric/export/aggregation"
+	// //processor "go.opentelemetry.io/otel/sdk/metric/processor/basic"
+	// //selector "go.opentelemetry.io/otel/sdk/metric/selector/simple"
 	// "go.opentelemetry.io/otel/sdk/resource"
 	// semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
 )
 
 const confPath = "./config.json"
 
-// var serviceName = semconv.ServiceNameKey.String("nostr-ex")
+//var serviceName = semconv.ServiceNameKey.String("nostr-ex")
 
 // func initMeter() {
 // 	c := controller.New(
