@@ -1,17 +1,21 @@
 package db
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"net/url"
 
+	_ "github.com/lib/pq"
+	"go.nhat.io/otelsql"
+	semconv "go.opentelemetry.io/otel/semconv/v1.20.0"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
 
-//defaule for postgresql
+// defaule for postgresql
 type Config struct {
 	Addr            string            `json:"server" env:"DB_ADDR" envDefault:"127.0.0.1"`
 	Port            string            `json:"port" env:"DB_PORT" envDefault:"5432"`
@@ -29,13 +33,43 @@ type Logger struct {
 	Logger logger.Interface
 }
 
+// func ConnectPostgres(cfg *Config, l *Logger) (*gorm.DB, error) {
+// 	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable TimeZone=Asia/Taipei",
+// 		cfg.Addr, cfg.Port, cfg.Username, cfg.Password, cfg.Database)
+// 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+// 	// db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+// 	// 	Logger: logger.Default.LogMode(logger.Info),
+// 	// }) //TODO
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	return db, nil
+// }
+
 func ConnectPostgres(cfg *Config, l *Logger) (*gorm.DB, error) {
 	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable TimeZone=Asia/Taipei",
 		cfg.Addr, cfg.Port, cfg.Username, cfg.Password, cfg.Database)
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	// db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-	// 	Logger: logger.Default.LogMode(logger.Info),
-	// }) //TODO
+
+	driverName, err := otelsql.Register("postgres",
+		otelsql.AllowRoot(),
+		otelsql.TraceQueryWithoutArgs(),
+		otelsql.TraceRowsClose(),
+		otelsql.TraceRowsAffected(),
+		otelsql.WithDatabaseName(cfg.Database),         // Optional.
+		otelsql.WithSystem(semconv.DBSystemPostgreSQL), // Optional.
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	conn, err := sql.Open(driverName, dsn)
+	if err != nil {
+		return nil, err
+	}
+	db, err := gorm.Open(postgres.New(postgres.Config{
+		Conn: conn,
+	}))
 	if err != nil {
 		return nil, err
 	}

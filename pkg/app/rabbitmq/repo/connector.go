@@ -23,7 +23,7 @@ type Connector struct {
 	url   string
 	qName string
 
-	//metrics *Metrics
+	metrics *Metrics
 	conn    *amqp.Connection
 	channel *amqp.Channel
 	queue   *amqp.Queue
@@ -31,9 +31,9 @@ type Connector struct {
 
 func NewConnector(url, qName string) *Connector {
 	s := &Connector{
-		url:   url,
-		qName: qName,
-		//metrics: NewMetrics("rabbit queue publisher"), //TODO:
+		url:     url,
+		qName:   qName,
+		metrics: NewMetrics("rabbit queue publisher"), //TODO:
 	}
 
 	return s
@@ -155,16 +155,16 @@ func (t *Connector) StartConsumer() error {
 
 func (t *Connector) Send(data []byte) error {
 
-	// t1 := time.Now()
-	// ctx := context.Background()
-	// defer t.metrics.Duration(ctx, t1)
+	t1 := time.Now()
+	ctx := context.Background()
+	defer t.metrics.Duration(ctx, t1)
 	var err error
 	defer func() {
-		// if err != nil {
-		// 	t.metrics.Fail(ctx)
-		// } else {
-		// 	t.metrics.Success(ctx)
-		// }
+		if err != nil {
+			t.metrics.Fail(ctx)
+		} else {
+			t.metrics.Success(ctx)
+		}
 	}()
 
 	err = t.ConnectStatus()

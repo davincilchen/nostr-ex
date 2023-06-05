@@ -4,21 +4,21 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"nostr-ex/pkg/otel"
 	"time"
 
-	"go.opentelemetry.io/otel/exporters/prometheus"
 	"go.opentelemetry.io/otel/metric"
-	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
+	//"go.opentelemetry.io/otel/metric"
 )
 
 func NewMetrics(meterName string) *Metrics {
-	exporter, err := prometheus.New()
-	if err != nil {
-		log.Fatal(err)
-	}
-	provider := sdkmetric.NewMeterProvider(sdkmetric.WithReader(exporter))
-	meter := provider.Meter(meterName)
-
+	// exporter, err := prometheus.New()
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// provider := sdkmetric.NewMeterProvider(sdkmetric.WithReader(exporter))
+	// meter := provider.Meter(meterName)
+	meter := otel.GetMeter()
 	s := ""
 	s2 := ""
 	s = fmt.Sprintf("%s success_counter", meterName)
