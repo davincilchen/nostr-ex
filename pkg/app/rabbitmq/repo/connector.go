@@ -125,21 +125,25 @@ func (t *Connector) StartConsumer() error {
 				SubID: "", //TODO:
 				Data:  string(d.Body),
 			}
-			err := eUCase.SaveEvent(&data)
-			if err != nil {
-				metrics.Fail(ctx)
-				logrus.Error(err)
-				continue
-			}
-			//fmt.Printf("%#v\n", data)
-			logrus.Debugf("%#v\n", data)
-			session.ForEachSession(func(s session.SessionF) {
-				s.OnDBDone()
-			})
+			func() {
+				t1 := time.Now()
+				defer metrics.Duration(ctx, t1)
+				err := eUCase.SaveEvent(&data)
+				if err != nil {
+					metrics.Fail(ctx)
+					logrus.Error(err)
+					return
+				}
+				//fmt.Printf("%#v\n", data)
+				logrus.Debugf("%#v\n", data)
+				session.ForEachSession(func(s session.SessionF) {
+					s.OnDBDone()
+				})
 
-			metrics.Success(ctx)
-			// mq := mqRepo.GetDBPublisher()
-			// mq.Send(data.ID)
+				metrics.Success(ctx)
+				// mq := mqRepo.GetDBPublisher()
+				// mq.Send(data.ID)
+			}()
 		}
 
 		fmt.Println("Message queue consumer stop")
