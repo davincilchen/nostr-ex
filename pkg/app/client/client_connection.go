@@ -120,7 +120,7 @@ func (t *ClientConnection) OnSocketMsg(message []byte) error {
 	return nil
 }
 
-func (t *ClientConnection) OnDBDone() {
+func (t *ClientConnection) OnDBDone() { //TODO: routine
 	fmt.Println("================= OnDBDone =================")
 	if t.curDBID < 0 {
 		return

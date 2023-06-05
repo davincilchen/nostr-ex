@@ -17,6 +17,7 @@ import (
 	"nostr-ex/pkg/config"
 	"nostr-ex/pkg/db"
 	"nostr-ex/pkg/models"
+	"nostr-ex/pkg/otel"
 )
 
 type Server struct {
@@ -62,6 +63,8 @@ func (t *Server) Serve() {
 	t.init()
 	t.checkPort()
 	addr := ":" + t.Config.Server.Port
+
+	otel.NewTracerProvider()
 
 	// Start MQ Consumer
 	mqConnector := mqRepo.NewConnector(t.Config.RabbitMQ.URL, t.Config.RabbitMQ.QName_NostrEvent)

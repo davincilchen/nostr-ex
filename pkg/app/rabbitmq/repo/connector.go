@@ -3,7 +3,6 @@ package repo
 import (
 	"context"
 	"fmt"
-	"log"
 	"nostr-ex/pkg/models"
 	"time"
 
@@ -11,13 +10,14 @@ import (
 	"nostr-ex/pkg/app/session/server/session"
 
 	amqp "github.com/rabbitmq/amqp091-go"
+	"github.com/sirupsen/logrus"
 )
 
-func failOnError(err error, msg string) {
-	if err != nil {
-		log.Panicf("%s: %s", msg, err)
-	}
-}
+// func failOnError(err error, msg string) {
+// 	if err != nil {
+// 		log.Panicf("%s: %s", msg, err)
+// 	}
+// }
 
 type Connector struct {
 	url   string
@@ -114,22 +114,30 @@ func (t *Connector) StartConsumer() error {
 	}
 
 	go func() {
+		ctx := context.Background()
+		metrics := NewConsumerMetrics("rabbit queue consumer")
+		eUCase := eventUCase.NewEventHandler()
 		for d := range msgs {
 			//TODO: delete log
 			fmt.Printf("Received a message from MQ: %s\n", d.Body)
 
-			eUCase := eventUCase.NewEventHandler()
 			data := models.Event{
 				SubID: "", //TODO:
 				Data:  string(d.Body),
 			}
-			eUCase.SaveEvent(&data)
-			fmt.Printf("%#v\n", data)
-
+			err := eUCase.SaveEvent(&data)
+			if err != nil {
+				metrics.Fail(ctx)
+				logrus.Error(err)
+				continue
+			}
+			//fmt.Printf("%#v\n", data)
+			logrus.Debugf("%#v\n", data)
 			session.ForEachSession(func(s session.SessionF) {
 				s.OnDBDone()
 			})
 
+			metrics.Success(ctx)
 			// mq := mqRepo.GetDBPublisher()
 			// mq.Send(data.ID)
 		}
