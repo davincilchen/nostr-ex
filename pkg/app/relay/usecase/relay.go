@@ -7,6 +7,8 @@ import (
 	mqRepo "nostr-ex/pkg/app/rabbitmq/repo"
 	"nostr-ex/pkg/app/session/connector/session"
 	"nostr-ex/pkg/token"
+
+	"github.com/sirupsen/logrus"
 )
 
 type Relay struct {
@@ -93,6 +95,11 @@ func (t *RelayConnector) OnSocketMsg(message []byte) error {
 
 func (t *RelayConnector) OnEvent(subID string, event []byte) {
 
+	defer func() {
+		if err := recover(); err != nil {
+			logrus.Error("RelayConnector OnEvent Error:", err)
+		}
+	}()
 	// jsonData, _ := json.Marshal(msg[2])
 	// if err := json.Unmarshal(jsonData, &event); err != nil {
 	// 	//if err := json.Unmarshal([]byte(msg[1].(string)), &event); err != nil {

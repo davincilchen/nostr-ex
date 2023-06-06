@@ -11,6 +11,8 @@ import (
 	//"go.opentelemetry.io/otel/metric"
 )
 
+var shareMetrics *ShareMetrics
+
 func NewMetrics(meterName string) *Metrics {
 	// exporter, err := prometheus.New()
 	// if err != nil {
@@ -65,4 +67,43 @@ func (t *Metrics) Fail(ctx context.Context) {
 
 func (t *Metrics) Duration(ctx context.Context, tt time.Time) {
 	t.duration.Record(ctx, time.Since(tt).Milliseconds())
+}
+
+type ShareMetrics struct {
+	queueSize metric.Int64UpDownCounter
+}
+
+func GetShareMetrics() *ShareMetrics {
+	if shareMetrics != nil {
+		return shareMetrics
+	}
+
+	shareMetrics = newShareMetrics()
+	return shareMetrics
+}
+
+func newShareMetrics() *ShareMetrics {
+	meterName := "MQ"
+	meter := otel.GetMeter()
+	s := ""
+	s2 := ""
+	s = fmt.Sprintf("%s queue_size", meterName)
+	s2 = fmt.Sprintf("%s: how many massage still in queue", meterName)
+	queueSize, err := meter.Int64UpDownCounter(s, metric.WithDescription(s2))
+	if err != nil {
+		log.Fatal(err) //TODO:
+	}
+
+	return &ShareMetrics{
+		queueSize: queueSize,
+	}
+
+}
+
+func (t *ShareMetrics) Enqueue(ctx context.Context) {
+	t.queueSize.Add(ctx, 1)
+}
+
+func (t *ShareMetrics) Dequeue(ctx context.Context) {
+	t.queueSize.Add(ctx, -1)
 }

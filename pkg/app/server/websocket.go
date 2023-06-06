@@ -3,7 +3,6 @@ package server
 import (
 	"fmt"
 	"net/http"
-	"runtime/debug"
 
 	"nostr-ex/pkg/app/client"
 	"nostr-ex/pkg/app/session/server/session"
@@ -44,7 +43,6 @@ func SocketHandler(c *gin.Context) {
 	defer func() {
 		if err := recover(); err != nil {
 			logrus.Error("session id:", s.ID(), "", err)
-			logrus.Error(string(debug.Stack()))
 
 		}
 		s.Close()

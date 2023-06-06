@@ -115,12 +115,19 @@ func (t *Connector) StartConsumer() error {
 	}
 
 	go func() {
+		defer func() {
+			if err := recover(); err != nil {
+				logrus.Error("Connector StartConsumer() Error:", err)
+			}
+		}()
 		ctx := context.Background()
 		metrics := NewMetrics("rabbit queue consumer")
 		eUCase := eventUCase.NewEventHandler()
 		for d := range msgs {
 			//TODO: delete log
 			fmt.Printf("Received a message from MQ: %s\n", d.Body)
+			shareMetrics := GetShareMetrics()
+			shareMetrics.Dequeue(ctx)
 
 			data := models.Event{
 				SubID: "", //TODO:
@@ -160,10 +167,13 @@ func (t *Connector) Send(data []byte) error {
 	defer t.metrics.Duration(ctx, t1)
 	var err error
 	defer func() {
+		ctx := context.Background()
 		if err != nil {
 			t.metrics.Fail(ctx)
 		} else {
 			t.metrics.Success(ctx)
+			metrics := GetShareMetrics()
+			metrics.Enqueue(ctx)
 		}
 	}()
 

@@ -2,7 +2,6 @@ package session
 
 import (
 	"fmt"
-	"runtime/debug"
 	"sync"
 	"time"
 
@@ -61,7 +60,7 @@ func (t *Session) WriteJson(v interface{}) error {
 func (t *Session) Start() error {
 	defer func() {
 		if err := recover(); err != nil {
-			log.Error(string(debug.Stack()))
+			log.Error("Session Start() Error:", err)
 		}
 	}()
 
@@ -91,8 +90,7 @@ func (t *Session) Start() error {
 func (t *Session) start() {
 	defer func() {
 		if err := recover(); err != nil {
-			log.Error(err)
-			log.Error(string(debug.Stack()))
+			log.Error("Session start() Error:", err)
 		}
 	}()
 
